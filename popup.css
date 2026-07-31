@@ -1,0 +1,52 @@
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  width: 280px;
+  transition: background 0.3s, color 0.3s;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #121212;
+    color: #ffffff;
+  }
+  textarea {
+    background-color: #1e1e1e;
+    color: #ffffff;
+    border: 1px solid #555;
+  }
+  textarea::placeholder {
+    color: #aaaaaa;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  body {
+    background-color: #ffffff;
+    color: #000000;
+  }
+  textarea {
+    background-color: #f8f8f8;
+    color: #000000;
+    border: 1px solid #ccc;
+  }
+}
+
+textarea {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+}
+
+button {
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+}

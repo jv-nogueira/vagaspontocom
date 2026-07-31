@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Match no Vagas.com",
+  "description": "Coleta automática de vagas com filtros por título e descrição.",
+  "version": "1.0",
+  "permissions": ["activeTab", "scripting", "downloads", "windows", "storage", "tabs"],
+  "host_permissions": ["https://www.vagas.com.br/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Coletar Vagas"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.vagas.com.br/*"],
+      "js": ["content.js"]
+    }
+  ]
+}
