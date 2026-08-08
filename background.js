@@ -69,13 +69,40 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
                   let rawTitle = document.querySelectorAll("h1")[0]?.innerText || "";
                   let rawCompany = document.querySelectorAll("h2")[0]?.innerText || "";
                   let descElement = document.querySelectorAll('[data-testid="JobDescription"]')[0];
+                  
+                  // Texto original preservado para o salvamento final
                   let rawDesc = descElement?.innerText || "";
+                  let rawDescHTML = descElement?.innerHTML || "";
 
-                  let lowerTitle = rawTitle.toLowerCase();
-                  let lowerDesc = rawDesc.toLowerCase();
+                  // Sanitização simples: remove tags HTML e ajusta espaços múltiplos
+                  let limparTextoBase = (txt) => {
+                    return txt
+                      .toLowerCase()
+                      .replace(/<[^>]*>/g, " ")
+                      .replace(/\s+/g, " ")
+                      .trim();
+                  };
 
-                  let palavrasTitulo = wordsTitle.filter(p => lowerTitle.includes(p));
-                  let palavrasDescricao = wordsDesc.filter(p => lowerDesc.includes(p));
+                  let lowerTitleClean = limparTextoBase(rawTitle);
+                  let lowerDescClean = limparTextoBase(rawDescHTML);
+
+                  // Regra Única e Direta (sem exceções ou pontos cegos):
+                  // Preserva símbolos no termo buscado e garante que NÃO haja letras ou números grudados nas pontas
+                  let contemPalavraExata = (texto, palavra) => {
+                    let termoTratado = palavra.toLowerCase().trim();
+                    if (!termoTratado) return false;
+
+                    let termoEscapado = termoTratado.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                    
+                    // Lookbehind e Lookahead com Unicode (\p{L} letras, \p{N} números)
+                    let padrao = `(?<![\\p{L}\\p{N}])${termoEscapado}(?![\\p{L}\\p{N}])`;
+
+                    let regex = new RegExp(padrao, 'iu');
+                    return regex.test(texto);
+                  };
+
+                  let palavrasTitulo = wordsTitle.filter(p => contemPalavraExata(lowerTitleClean, p));
+                  let palavrasDescricao = wordsDesc.filter(p => contemPalavraExata(lowerDescClean, p));
 
                   palavrasTitulo = [...new Set(palavrasTitulo)];
                   palavrasDescricao = [...new Set(palavrasDescricao)];
@@ -90,9 +117,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
                     empresa: rawCompany,
                     palavrasTitulo: palavrasTitulo.join('; '),
                     palavrasDescricao: palavrasDescricao.join('; '),
-                    descricao: rawDesc
+                    descricao: rawDesc // Salva o texto original exato
                   });
-                }, 3000);
+                }, 5000);
               });
             },
             args: [msg.wordsTitle || [], msg.wordsDesc || [], msg.saveAll || false]
@@ -142,7 +169,7 @@ function gerarArquivoTxt() {
   dadosColetados.forEach(vaga => {
     let titFormatado = '"' + (vaga.titulo || '').replace(/\n+/g, ' ') + '"';
     let empFormatada = "'" + (vaga.empresa || '');
-    let descFormatada = '"' + (vaga.descricao || '').replace(/\n+/g, '\n').replace(/"/g, '').trim() + '"';
+    let descFormatada = '"' + (vaga.descricao || '').replace(/(\r?\n\s*)+/g, '\n').replace(/"/g, '').trim() + '"';
 
     csvContent += `${vaga.dataHora}\t${titFormatado}\t${empFormatada}\t${vaga.palavrasTitulo}\t${vaga.palavrasDescricao}\t${vaga.url}\t${descFormatada}\n`;
   });
